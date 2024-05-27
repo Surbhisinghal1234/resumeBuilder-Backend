@@ -134,7 +134,7 @@ const registerSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true,
-        unique: true,
+        
     },
     password: {
         type: String,
@@ -161,23 +161,23 @@ const upload = multer({ storage: storage })
 
 app.post("/send", upload.single("image"), async (req, res) => {
     try {
-        console.log("Request Body:", req.body); // Log request body
-        console.log("File:", req.file); // Log uploaded file info
+        console.log("Body", req.body); 
+        console.log("File", req.file); 
 
         const { dataSave } = req.body;
 
         if (!dataSave) {
-            throw new Error("dataSave is missing");
+            return { error: "no data found" };
         }
+  
+        const parseData = JSON.parse(dataSave);
+        console.log("ParseData", parseData); 
 
-        // Parse the JSON string to a JavaScript object
-        const parsedDataSave = JSON.parse(dataSave);
-        console.log("Parsed DataSave:", parsedDataSave); // Log parsed data
+        const { email, name, role, totalExp } = parseData.details;
+        const { message, pointers } = parseData.AboutMe;
+        const skillProficiencies = parseData.SkillsProficiencies;
+        const workExperience = parseData.workExperience;
 
-        const { email, name, role, totalExp } = parsedDataSave.details;
-        const { message, pointers } = parsedDataSave.AboutMe;
-        const skillProficiencies = parsedDataSave.SkillsProficiencies;
-        const workExperience = parsedDataSave.workExperience;
         const image = req.file ? req.file.path : "";
         console.log(image, "imageee")
 
@@ -188,13 +188,13 @@ app.post("/send", upload.single("image"), async (req, res) => {
             workExperience: workExperience
         });
 
-        console.log("Data to Save:", dataToSave); // Log the data to save
+        console.log("DataToSave", dataToSave); 
 
         await dataToSave.save();
         res.status(200).json({ message: "Data saved successfully", dataToSave });
         console.log(dataToSave, "dataToSave")
     } catch (err) {
-        console.error("Server Error:", err); // Log the error
+        console.error("Server Error", err); 
         res.status(500).json({ message: "Server Error", error: err.message });
     }
 });
@@ -209,7 +209,7 @@ app.post("/register", async (req, res) => {
         // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-        password = hashedPassword
+
         // Create new user
         const newUser = new RegisterModel({ name, email, password: hashedPassword });
         await newUser.save();
@@ -235,22 +235,16 @@ app.post("/login", async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
+        console.log("User", user);
 
-        console.log("Plain text password:", password);
-        console.log("Stored hash:", user.password);
+        console.log("password", password);
+        console.log("hash", user.password);
 
         // Compare passwords
         const passwordMatch = await bcrypt.compare(password, user.password);
         if (!passwordMatch) {
             return res.status(401).json({ message: "Incorrect Password" });
         }
-
-        // res.status(200).json({
-        //     message: "Login successful",
-        //     user: {
-        //         email: user.email,
-        //     },
-        // });
         await user.save();
         res.status(200).json({ message: "Login successful" });
     } catch (error) {
@@ -332,3 +326,4 @@ app.put("/update/:id", upload.single('image'), async (req, res) => {
         res.status(500).json({ message: "Server Error" });
     }
 });
+

@@ -4,14 +4,25 @@ import bcrypt from "bcrypt";
 import cors from "cors";
 import multer from "multer";
 import path from "path"
+import "dotenv/config";
+
 const app = express();
 const port = 8000;
+const username = process.env.MONGO_USERNAME;
+const password = encodeURIComponent(process.env.MONGO_PASSWORD);
 
 app.use(express.json());
 app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.urlencoded({ extended: true }));
 
-mongoose.connect("mongodb://127.0.0.1:27017/resumeBuilder")
+mongoose.connect(
+    "mongodb+srv://" +
+    username +
+    ":" +
+    password +
+    "@cluster0.3j0ywmp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0/resumeBuilder"
+   
+)
     .then(() => {
         console.log("MongoDB connected");
         app.listen(port, () => {
@@ -134,7 +145,7 @@ const registerSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true,
-        
+
     },
     password: {
         type: String,
@@ -161,17 +172,16 @@ const upload = multer({ storage: storage })
 
 app.post("/send", upload.single("image"), async (req, res) => {
     try {
-        console.log("Body", req.body); 
-        console.log("File", req.file); 
-
+        console.log("Body", req.body);
+        console.log("File", req.file);
         const { dataSave } = req.body;
 
         if (!dataSave) {
             return { error: "no data found" };
         }
-  
+
         const parseData = JSON.parse(dataSave);
-        console.log("ParseData", parseData); 
+        console.log("ParseData", parseData);
 
         const { email, name, role, totalExp } = parseData.details;
         const { message, pointers } = parseData.AboutMe;
@@ -188,13 +198,13 @@ app.post("/send", upload.single("image"), async (req, res) => {
             workExperience: workExperience
         });
 
-        console.log("DataToSave", dataToSave); 
+        console.log("DataToSave", dataToSave);
 
         await dataToSave.save();
         res.status(200).json({ message: "Data saved successfully", dataToSave });
         console.log(dataToSave, "dataToSave")
     } catch (err) {
-        console.error("Server Error", err); 
+        console.error("Server Error", err);
         res.status(500).json({ message: "Server Error", error: err.message });
     }
 });
@@ -246,7 +256,7 @@ app.post("/login", async (req, res) => {
             return res.status(401).json({ message: "Incorrect Password" });
         }
         await user.save();
-        res.status(200).json({ message: "Login successful" });
+        res.status(200).json({ message: "Login successful", });
     } catch (error) {
         console.error("Error:", error);
         res.status(500).json({ message: "Server Error" });
@@ -259,6 +269,8 @@ app.get("/userData", async (req, res) => {
     const { email } = req.query;
     try {
         const user = await RegisterModel.findOne({ email });
+        // const user = await RegisterModel.findById(_id);
+
         const resumeProfiles = await dbModel.find({ "details.email": email });
         if (!user) {
             return res.status(404).json({ message: "User not found" });

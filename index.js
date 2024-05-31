@@ -4,16 +4,24 @@ import bcrypt from "bcrypt";
 import cors from "cors";
 import multer from "multer";
 import path from "path"
+import { fileURLToPath } from "url";
 import "dotenv/config";
 
 const app = express();
 const port = 8000;
+
+
 const username = process.env.MONGO_USERNAME;
 const password = encodeURIComponent(process.env.MONGO_PASSWORD);
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 app.use(express.json());
-app.use(cors({ origin: "http://localhost:5173" }));
+app.use(cors({ origin: "*" }));
 app.use(express.urlencoded({ extended: true }));
+
+app.use('/resumeBuilder', express.static(path.join(__dirname, 'resumeBuilder')));
 
 mongoose.connect(
     "mongodb+srv://" +
@@ -21,7 +29,7 @@ mongoose.connect(
     ":" +
     password +
     "@cluster0.3j0ywmp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0/resumeBuilder"
-   
+
 )
     .then(() => {
         console.log("MongoDB connected");

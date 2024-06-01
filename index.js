@@ -8,7 +8,8 @@ import { fileURLToPath } from "url";
 import "dotenv/config";
 
 const app = express();
-const port = 8000;
+// const port = 8000;
+const port = process.env.PORT
 
 
 const username = process.env.MONGO_USERNAME;

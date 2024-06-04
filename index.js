@@ -22,17 +22,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(express.json());
-app.use(cors({ origin: "*" }));
+app.use(cors({ origin: "https://resume-builder-sigma-five.vercel.app" }));
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser()); 
+app.use(cookieParser());
 
 
 app.use(session({
     secret: 'surbhi1234',
     resave: false,
     saveUninitialized: true,
-    store: MongoStore.create({ mongoUrl: "mongodb+srv://" + username + ":" + password + "@cluster0.3j0ywmp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0/resumeBuilder"}),
-    cookie: {maxAge: 60000}
+    store: MongoStore.create({ mongoUrl: "mongodb+srv://" + username + ":" + password + "@cluster0.3j0ywmp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0/resumeBuilder" }),
+    cookie: { maxAge: 60000 }
 }));
 app.use('/resumeBuilder', express.static(path.join(__dirname, 'resumeBuilder')));
 
@@ -245,10 +245,10 @@ app.post("/register", async (req, res) => {
         const newUser = new RegisterModel({ name, email, password: hashedPassword });
         await newUser.save();
 
-         //jwt 
-         const token = jwt.sign({ id: newUser._id, email: email, },"surbhi1234", { expiresIn: '2m' });
+        //jwt 
+        const token = jwt.sign({ id: newUser._id, email: email, }, "surbhi1234", { expiresIn: '2m' });
 
-         res.cookie('token', token)
+        res.cookie('token', token)
 
         res.status(201).json({ message: "User registered successfully" });
         console.log(newUser)
@@ -279,14 +279,14 @@ app.post("/login", async (req, res) => {
             return res.status(401).json({ message: "Incorrect Password" });
         }
         await user.save();
-            // jwt
-             const token = jwt.sign({ id: user._id,email:email }, "surbhi1234", { expiresIn: '1m' });
-              console.log(token,"token")
-              res.cookie('token', token)
-            // req.cookie(token)
+        // jwt
+        const token = jwt.sign({ id: user._id, email: email }, "surbhi1234", { expiresIn: '1m' });
+        console.log(token, "token")
+        res.cookie('token', token)
+        // req.cookie(token)
         // req.session.token = token;
 
-        res.status(200).json({token:token, message: "Login successful", });
+        res.status(200).json({ token: token, message: "Login successful", });
     } catch (error) {
         console.error("error", error);
         res.status(500).json({ message: "error" });

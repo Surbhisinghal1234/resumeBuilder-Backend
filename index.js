@@ -22,7 +22,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(express.json());
-app.use(cors({ origin: "https://resume-builder-sigma-five.vercel.app" }));
+app.use(cors({ origin: "*" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 

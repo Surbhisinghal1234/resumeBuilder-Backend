@@ -378,3 +378,6 @@ app.post("/logout", (req, res) => {
     res.status(200).json({ message: "Logged out successfully" });
     console.log({ message: "Logged out successfully" })
 });
+app.use((req, res, next) => {
+    res.redirect('/');
+});

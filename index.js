@@ -124,10 +124,13 @@ const dbSchema = new mongoose.Schema({
             startDate: {
                 type: String,
                 required: true,
+                format: Date,
+
             },
             endDate: {
                 type: String,
                 required: true,
+                format:Date,
             },
             businessSolution: {
                 type: String,

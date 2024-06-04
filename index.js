@@ -12,8 +12,8 @@ import session from 'express-session';
 import MongoStore from 'connect-mongo';
 
 const app = express();
-const port = 8000;
-// const port = process.env.PORT
+// const port = 8000;
+const port = process.env.PORT || 8000
 
 const username = process.env.MONGO_USERNAME;
 const password = encodeURIComponent(process.env.MONGO_PASSWORD);

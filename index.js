@@ -4,13 +4,16 @@ import bcrypt from "bcrypt";
 import cors from "cors";
 import multer from "multer";
 import path from "path"
+import jwt from "jsonwebtoken";
+import cookieParser from "cookie-parser";
 import { fileURLToPath } from "url";
 import "dotenv/config";
+import session from 'express-session';
+import MongoStore from 'connect-mongo';
 
 const app = express();
-// const port = 8000;
-const port = process.env.PORT
-
+const port = 8000;
+// const port = process.env.PORT
 
 const username = process.env.MONGO_USERNAME;
 const password = encodeURIComponent(process.env.MONGO_PASSWORD);
@@ -19,12 +22,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(express.json());
-// app.use(cors({ origin: "*" }));
-
-app.use(cors({ origin: "https://resume-builder-sigma-five.vercel.app/" }));
-
+app.use(cors({ origin: "*" }));
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser()); 
 
+
+app.use(session({
+    secret: 'surbhi1234',
+    resave: false,
+    saveUninitialized: true,
+    store: MongoStore.create({ mongoUrl: "mongodb+srv://" + username + ":" + password + "@cluster0.3j0ywmp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0/resumeBuilder"}),
+    cookie: {maxAge: 60000}
+}));
 app.use('/resumeBuilder', express.static(path.join(__dirname, 'resumeBuilder')));
 
 mongoose.connect(
@@ -236,6 +245,11 @@ app.post("/register", async (req, res) => {
         const newUser = new RegisterModel({ name, email, password: hashedPassword });
         await newUser.save();
 
+         //jwt 
+         const token = jwt.sign({ id: newUser._id, email: email, },"surbhi1234", { expiresIn: '2m' });
+
+         res.cookie('token', token)
+
         res.status(201).json({ message: "User registered successfully" });
         console.log(newUser)
     } catch (error) {
@@ -247,18 +261,15 @@ app.post("/register", async (req, res) => {
 
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
-
     try {
         if (!email || !password) {
             return res.status(400).json({ message: "Enter email and password" });
         }
-
         const user = await RegisterModel.findOne({ email });
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
         console.log("User", user);
-
         console.log("password", password);
         console.log("hash", user.password);
 
@@ -268,13 +279,19 @@ app.post("/login", async (req, res) => {
             return res.status(401).json({ message: "Incorrect Password" });
         }
         await user.save();
-        res.status(200).json({ message: "Login successful", });
+            // jwt
+             const token = jwt.sign({ id: user._id,email:email }, "surbhi1234", { expiresIn: '1m' });
+              console.log(token,"token")
+              res.cookie('token', token)
+            // req.cookie(token)
+        // req.session.token = token;
+
+        res.status(200).json({token:token, message: "Login successful", });
     } catch (error) {
-        console.error("Error:", error);
-        res.status(500).json({ message: "Server Error" });
+        console.error("error", error);
+        res.status(500).json({ message: "error" });
     }
 });
-
 
 // backend se data frontend me lene ke liye 
 app.get("/userData", async (req, res) => {
@@ -295,6 +312,7 @@ app.get("/userData", async (req, res) => {
         res.status(500).json({ message: "Server Error" });
     }
 });
+
 
 // delete one
 app.delete("/delete/:id", async (req, res) => {
@@ -351,3 +369,9 @@ app.put("/update/:id", upload.single('image'), async (req, res) => {
     }
 });
 
+
+app.post("/logout", (req, res) => {
+    res.clearCookie('token');
+    res.status(200).json({ message: "Logged out successfully" });
+    console.log({ message: "Logged out successfully" })
+});
